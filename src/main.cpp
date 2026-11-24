@@ -196,8 +196,9 @@ bool intersects(sf::Vector2f point, const BVHNode& node, const BVH& bvh, Vector4
 // TODO Q3: store a 2D movement direction for each circle, and write an update() function that
 // moves every circle by its movement.
 struct Scene {
-    std::size_t createCircle(sf::Vector2f position, float radius, const Vector4f& color) {
+    std::size_t createCircle(sf::Vector2f position, float radius, const Vector4f& color, sf::Vector2f direction) {
         circles.push_back({position, radius, color});
+        directions.push_back(direction);
         return circles.size() - 1;
     }
 
@@ -208,7 +209,15 @@ struct Scene {
 
     bool valid(std::size_t i) const { return i < circles.size(); }
 
+    void update() {
+        for (std::size_t i = 0; i < circles.size(); ++i) {
+            circles[i].position += directions[i];
+        }
+    }
+
     std::vector<Circle> circles;
+    std::vector<sf::Vector2f> directions;
+
 };
 
 void Draw(sf::RenderWindow& window, const AABB<float>& aabb) {
@@ -234,7 +243,8 @@ int main() {
     Scene scene;
     for (int n = 0; n < 100; ++n) {
         scene.createCircle({uniform(0, gScreenWidth), uniform(0, gScreenHeight)}, uniform(10, 20),
-                           {uniform(0, 1), uniform(0, 1), uniform(0, 1), 1});
+                           {uniform(0, 1), uniform(0, 1), uniform(0, 1), 1},
+                           {uniform(-1, 1), uniform(-1, 1)});
     }
     BVH bvh(scene.circles);
 
@@ -251,7 +261,11 @@ int main() {
         }
 
         // TODO Q3: every frame, call update() on the scene and fullRefit() on the BVH.
+        scene.update();
+        bvh.fullRefit();
+
         // TODO Q4: rebuild the BVH with reset() instead of fullRefit().
+        
 
         for (int y = 0; y < gScreenHeight; ++y) {
             for (int x = 0; x < gScreenWidth; ++x) {
