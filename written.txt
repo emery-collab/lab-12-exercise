@@ -1,5 +1,8 @@
 ﻿Q3. What happens to the bounding boxes with update + fullRefit?
 
+
 Q4. What happens with reset (rebuild every frame) instead?
 
+
 Q5. Why are some circles drawn with their sides cut off?
+The circles are drawn with their sides cut off because the BVH is rebuilt before updating the scene. This causes the BVH bounding boxes to represent the circles' previous positions rather than their current positions. During rendering, the intersection algorithm uses these outdated bounding boxes to prune unnecessary intersection tests. Consequently, pixels belonging to portions of circles outside their old bounding boxes are incorrectly discarded. Updating the scene before rebuilding the BVH fixes the issue.

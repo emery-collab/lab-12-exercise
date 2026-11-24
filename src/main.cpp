@@ -56,6 +56,20 @@ struct BVH {
     }
 
     // TODO Q4: write a reset() function that rebuilds the tree instead of refitting it.
+    void reset() {
+        // Rebuild the primitive index list.
+        indices.resize(primitives->size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        // Clear the old tree.
+        nodes.clear();
+
+        // Recreate the root node.
+        nodes.push_back({});
+
+        // Rebuild the BVH using the current circle positions.
+        constructNode(0, static_cast<int>(indices.size()), 0);
+    }
 
     void constructNode(int startIdx, int numIndices, int bvhOffset) {
         const std::vector<Circle>& prims = *primitives;
@@ -262,10 +276,9 @@ int main() {
 
         // TODO Q3: every frame, call update() on the scene and fullRefit() on the BVH.
         scene.update();
-        bvh.fullRefit();
-
-        // TODO Q4: rebuild the BVH with reset() instead of fullRefit().
         
+        // TODO Q4: rebuild the BVH with reset() instead of fullRefit().
+        bvh.reset();
 
         for (int y = 0; y < gScreenHeight; ++y) {
             for (int x = 0; x < gScreenWidth; ++x) {
