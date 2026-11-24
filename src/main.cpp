@@ -258,8 +258,27 @@ int main() {
                 const sf::Vector2f pixel(static_cast<float>(x), static_cast<float>(y));
                 // TODO Q2: antialiasing. Take four samples at offsets of +-0.3333 from the pixel
                 // and average their colors.
-                Vector4f color{};  // stays transparent black on a miss
-                intersects(pixel, bvh.nodes[0], bvh, color);
+
+                
+                Vector4f color{0.f, 0.f, 0.f, 0.f};
+                constexpr float offset = 0.3333f;
+
+                const std::array<sf::Vector2f, 4> sampleOffsets = {{
+                    {-offset, -offset},
+                    { offset, -offset},
+                    {-offset,  offset},
+                    { offset,  offset}
+                }};
+
+                for (const auto& sampleOffset : sampleOffsets) {
+                    Vector4f sampleColor{0.f, 0.f, 0.f, 0.f};
+
+                    intersects(pixel + sampleOffset, bvh.nodes[0], bvh, sampleColor);
+                    color += sampleColor;
+                }
+                
+
+                color /= 4.f;
                 const std::size_t i = 4 * (static_cast<std::size_t>(y) * gScreenWidth + x);
                 pixels[i + 0] = static_cast<std::uint8_t>(255 * color.x);  // R
                 pixels[i + 1] = static_cast<std::uint8_t>(255 * color.y);  // G
@@ -273,7 +292,9 @@ int main() {
         window.draw(sprite);
         // TODO Q1: only draw non-leaf nodes so the BVH structure is easier to see.
         for (const BVHNode& node : bvh.nodes) {
-            Draw(window, node.bounds);
+            if (!node.isLeaf) {
+                Draw(window, node.bounds);
+            }
         }
         window.display();
     }
