@@ -1,8 +1,14 @@
 ﻿Q3. What happens to the bounding boxes with update + fullRefit?
-
+The bounding boxes update to contain the circles at their new positions, but the BVH's original tree structure 
+remains unchanged. As circles move, bounding boxes can become larger and overlap more.
 
 Q4. What happens with reset (rebuild every frame) instead?
-
+The BVH is rebuilt using the circles' current positions. This reorganizes the tree and produces tighter, more 
+efficient bounding boxes, but requires more computation than refitting.
 
 Q5. Why are some circles drawn with their sides cut off?
-The circles are drawn with their sides cut off because the BVH is rebuilt before updating the scene. This causes the BVH bounding boxes to represent the circles' previous positions rather than their current positions. During rendering, the intersection algorithm uses these outdated bounding boxes to prune unnecessary intersection tests. Consequently, pixels belonging to portions of circles outside their old bounding boxes are incorrectly discarded. Updating the scene before rebuilding the BVH fixes the issue.
+The circles are drawn with their sides cut off because the BVH is rebuilt before updating the scene. 
+This causes the BVH bounding boxes to represent the circles' previous positions rather than their 
+current positions. During rendering, the intersection algorithm uses these outdated bounding boxes 
+to prune unnecessary intersection tests. Consequently, pixels belonging to portions of circles outside 
+their old bounding boxes are incorrectly discarded. Updating the scene before rebuilding the BVH fixes the issue.
