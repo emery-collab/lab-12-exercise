@@ -39,7 +39,8 @@ struct BVHNode {
     int childBOrLen = -1;  // if leaf node, length into index list, else child bvh node ptr
     int isLeaf = 0;
     // TODO Bonus 1: store each node's height in the tree and color its box in Draw by height.
-    int padding = 0;  // to get to POT size of 32 bytes.
+    int height = 0;  // to get to POT size of 32 bytes. 
+    // replaced with height
 };
 static_assert(sizeof(BVHNode) == 32, "keep BVHNode a power-of-two size");
 
@@ -140,7 +141,7 @@ struct BVH {
         }
 
         const auto makeLeaf = [&] {
-            nodes[bvhOffset] = BVHNode{totalBound, startIdx, numIndices, /*isLeaf=*/true};
+            nodes[bvhOffset] = BVHNode{totalBound, startIdx, numIndices, /*isLeaf=*/true, /*height=*/0}; // added height
         };
         // see if we should be leaf node
         if (numIndices * T_ISECT < minCost) {
@@ -164,6 +165,7 @@ struct BVH {
         nodes.resize(nodes.size() + 2);  // filled in by the recursive calls
         constructNode(startIdx, smallerCount, childA);
         constructNode(startIdx + smallerCount, numIndices - smallerCount, childB);
+        nodes[bvhOffset].height = 1 + std::max(nodes[childA].height, nodes[childB].height); //added height calculation
     }
 
     // Refit every box bottom-up without changing the tree structure. Children are always stored
@@ -234,13 +236,13 @@ struct Scene {
 
 };
 
-void Draw(sf::RenderWindow& window, const AABB<float>& aabb) {
+void Draw(sf::RenderWindow& window, const AABB<float>& aabb, sf::Color color) { // added color
     // draw frame of rectangle
     static sf::RectangleShape shape;
     shape.setSize(aabb.maxPoint - aabb.minPoint);
     shape.setPosition(aabb.minPoint);
     shape.setFillColor(sf::Color::Transparent);
-    shape.setOutlineColor(sf::Color::White);
+    shape.setOutlineColor(color);
     shape.setOutlineThickness(1.0f);
     window.draw(shape);
 }
@@ -318,9 +320,19 @@ int main() {
         window.clear();
         window.draw(sprite);
         // TODO Q1: only draw non-leaf nodes so the BVH structure is easier to see.
+        const int maxHeight = bvh.nodes[0].height;
+
+        // max height gets the roots height, 
+        // t normalizes each node's height between 0 and 1, 
+        // the red componenent decreasesa as height increases,
+        // the blue component increases as height increases
         for (const BVHNode& node : bvh.nodes) {
             if (!node.isLeaf) {
-                Draw(window, node.bounds);
+                float t = static_cast<float>(node.height) / static_cast<float>(std::max(1, maxHeight));
+
+                sf::Color color(static_cast<std::uint8_t>(255 * (1.f - t)), 0, static_cast<std::uint8_t>(255 * t));
+
+                Draw(window, node.bounds, color);
             }
         }
         window.display();
